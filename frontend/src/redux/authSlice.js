@@ -29,7 +29,8 @@ export const authSlice = createSlice({
 
 export const { loginStart, loginSuccess, loginFailure, logout } = authSlice.actions;
 
-const API_URL = 'http://localhost:8000/api/v1/users';
+// const API_URL = 'http://localhost:8000/api/v1/users';
+const API_URL =  'https://cineverse-fnr5.onrender.com/api/v1/users';
 
 
 export const login = (credentials) => async (dispatch) => {

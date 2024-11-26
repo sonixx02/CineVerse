@@ -1,11 +1,11 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-
+const API_URL =  'https://cineverse-fnr5.onrender.com/api/v1/users';
 export const getChannelVideos = createAsyncThunk('uservideos/getChannelVideos', async (username) => {
   try {
     
-    const response = await axios.get(`http://localhost:8000/api/v1/users/dashboard/channel-videos/${username}`);
+    const response = await axios.get(`${API_URL}/dashboard/channel-videos/${username}`);
     console.log(response);
     return response.data.data.videos;
   } catch (error) {
@@ -15,7 +15,7 @@ export const getChannelVideos = createAsyncThunk('uservideos/getChannelVideos', 
 
 export const getChannelStatus = createAsyncThunk('uservideos/getChannelStatus', async (username) => {
   try {
-    const response = await axios.get(`http://localhost:8000/api/v1/users/dashboard/channel-stats/${username}`);
+    const response = await axios.get(`${API_URL}/users/dashboard/channel-stats/${username}`);
     console.log(response.data.data.channelStats); // Debugging response
     return response.data.data.channelStats; // Return the channelStats array
   } catch (error) {

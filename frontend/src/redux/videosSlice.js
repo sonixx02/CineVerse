@@ -1,11 +1,11 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-
+const API_URL =  'https://cineverse-fnr5.onrender.com/api/v1/users';
 // Async thunk to update video
 export const updateVideo = createAsyncThunk('videos/updateVideo', async ({ videoId, title, description, videoFile }) => {
   try {
     // Update the title and description
-    const response = await axios.put(`http://localhost:8000/api/v1/users/${videoId}`, 
+    const response = await axios.put(`${API_URL}/${videoId}`, 
       { title, description },
       {
         headers: {
@@ -18,7 +18,7 @@ export const updateVideo = createAsyncThunk('videos/updateVideo', async ({ video
     if (videoFile) {
       const formData = new FormData();
       formData.append('videoFile', videoFile);
-      await axios.put(`http://localhost:8000/api/v1/users/${videoId}`, formData, {
+      await axios.put(`${API_URL}/${videoId}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -26,7 +26,7 @@ export const updateVideo = createAsyncThunk('videos/updateVideo', async ({ video
     }
 
     // Fetch the updated video data
-    const updatedVideoResponse = await axios.get(`http://localhost:8000/api/v1/users/${videoId}`);
+    const updatedVideoResponse = await axios.get(`${API_URL}/${videoId}`);
     return updatedVideoResponse.data.data;
   } catch (error) {
     return Promise.reject(error.response?.data?.message || error.message);
@@ -36,7 +36,7 @@ export const updateVideo = createAsyncThunk('videos/updateVideo', async ({ video
 // Async thunk to delete video
 export const deleteVideo = createAsyncThunk('videos/deleteVideo', async (videoId) => {
   try {
-    await axios.delete(`http://localhost:8000/api/v1/users/${videoId}`);
+    await axios.delete(`${API_URL}/${videoId}`);
     return videoId; // Return the ID of the deleted video
   } catch (error) {
     return Promise.reject(error.response?.data?.message || error.message);
@@ -46,7 +46,7 @@ export const deleteVideo = createAsyncThunk('videos/deleteVideo', async (videoId
 // Async thunk to fetch random videos
 export const RandomVideos = createAsyncThunk('videos/RandomVideos', async () => {
   try {
-    const response = await axios.get('http://localhost:8000/api/v1/users/dashboard/random');
+    const response = await axios.get('${API_URL}/dashboard/random');
     return response.data.data; 
   } catch (error) {
     return Promise.reject(error.response?.data?.message || error.message);
@@ -68,7 +68,7 @@ export const fetchVideos = createAsyncThunk(
   'videos/fetchVideos',
   async (searchTerm) => {
     try {
-      const response = await axios.get(`http://localhost:8000/api/v1/users/getVideos?query=${searchTerm}`);
+      const response = await axios.get(`${API_URL}/getVideos?query=${searchTerm}`);
       console.log(response.data); // Log response data for debugging
       return response.data.data; // Return the video data
     } catch (error) {
