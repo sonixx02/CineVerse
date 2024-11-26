@@ -6,7 +6,7 @@ import { useSelector } from 'react-redux';
 import Login from './components/Login';
 import Logout from './components/Logout';
 import Dashboard from './components/Dashboard';
-import VideoDetail from './components/VideoDetail';
+import VideoDetail from './components/VideoDetail.jsx';
 import AdminVideos from './components/AdminVideos'; 
 import History from './components/History';
 // import VoiceCommand from './components/VoiceCommand'; // Import your VoiceCommand component
