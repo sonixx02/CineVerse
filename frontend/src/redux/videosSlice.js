@@ -54,14 +54,31 @@ export const RandomVideos = createAsyncThunk('videos/RandomVideos', async () => 
 });
 
 // Async thunk to fetch videos by query
-export const fetchVideos = createAsyncThunk('videos/fetchVideos', async (query) => {
-  try {
-    const response = await axios.get(`http://localhost:8000/api/v1/users/getVideos?query=${query}`);
-    return response.data.data; 
-  } catch (error) {
-    return Promise.reject(error.response?.data?.message || error.message);
+// export const fetchVideos = createAsyncThunk('videos/fetchVideos', async (query) => {
+//   try {
+//     const response = await axios.get(`http://localhost:8000/api/v1/users/getVideos?query=${query}`);
+//     console.log(response.data);
+//     return response.data.data; 
+//   } catch (error) {
+//     return Promise.reject(error.response?.data?.message || error.message);
+//   }
+// });
+
+export const fetchVideos = createAsyncThunk(
+  'videos/fetchVideos',
+  async (searchTerm) => {
+    try {
+      const response = await axios.get(`http://localhost:8000/api/v1/users/getVideos?query=${searchTerm}`);
+      console.log(response.data); // Log response data for debugging
+      return response.data.data; // Return the video data
+    } catch (error) {
+      // Handle error and return a rejected promise
+      return Promise.reject(error.response?.data?.message || error.message);
+    }
   }
-});
+);
+
+
 
 // Async thunk to add a new video
 export const addVideo = createAsyncThunk('videos/addVideo', async (formData) => {
@@ -141,8 +158,9 @@ const videosSlice = createSlice({
         state.status = 'loading';
       })
       .addCase(fetchVideos.fulfilled, (state, action) => {
+        console.log('Fetched videos:', action.payload);
         state.status = 'succeeded';
-        state.videos = action.payload;
+        state.videos = action.payload.data;
       })
       .addCase(fetchVideos.rejected, (state, action) => {
         state.status = 'failed';

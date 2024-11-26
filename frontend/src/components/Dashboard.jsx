@@ -7,6 +7,8 @@ import {
   addToWatchHistory,
 } from "../redux/videosSlice";
 import { logout } from "../redux/authSlice";
+import VoiceCommand from "./VoiceCommand";
+
 
 const Dashboard = () => {
   const dispatch = useDispatch();
@@ -24,9 +26,16 @@ const Dashboard = () => {
 
   const videoRefs = useRef({}); // To store refs for each video
 
+  // useEffect(() => {
+  //   dispatch(RandomVideos());
+  // }, [dispatch]);
+
   useEffect(() => {
-    dispatch(RandomVideos());
+    dispatch(RandomVideos()).then((response) => {
+      console.log('Fetched videos:', response);
+    });
   }, [dispatch]);
+  
 
   const handleLogout = () => {
     dispatch(logout());
@@ -97,6 +106,11 @@ const Dashboard = () => {
     };
   }, []);
 
+   // Handle voice search command
+   const handleVoiceSearch = (searchTerm) => {
+    setQuery(searchTerm); // Set the query from voice command
+  };
+
   if (status === "loading") {
     return <div className="text-center text-lg font-semibold">Loading...</div>;
   }
@@ -107,6 +121,7 @@ const Dashboard = () => {
 
   return (
     <div className="p-4 max-w-4xl mx-auto">
+      
       <div className="flex justify-between items-center">
         <button
           onClick={handleLogout}

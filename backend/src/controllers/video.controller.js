@@ -8,6 +8,10 @@ import {
   uploadOnCloudinary,
 } from "../utils/cloudinary.js";
 
+import { promises as fs } from 'fs';
+import NSFWDetector from './utils/nfsw/index.js';
+
+
 
 const isVideoOwner = async (videoId, userId) => {
   try {
@@ -86,65 +90,159 @@ const getAllVideos = asyncHandler(async (req, res) => {
 
 
 
-const publishAVideo = asyncHandler(async (req, res) => {
-  // Log the incoming request body and files
-  console.log('Request body:', req.body);
-  console.log('Uploaded files:', req.files);
+// const publishAVideo = asyncHandler(async (req, res) => {
+//   // Log the incoming request body and files
+//   console.log('Request body:', req.body);
+//   console.log('Uploaded files:', req.files);
 
+//   const { title, description } = req.body;
+//   const videoFile = req.files?.videoFile?.[0];
+//   const thumbnailFile = req.files?.thumbnailFile?.[0];
+
+//   // Log the extracted files
+//   console.log('Video file:', videoFile);
+//   console.log('Thumbnail file:', thumbnailFile);
+
+//   if (!title || !description || !videoFile) {
+//     throw new ApiError(400, "Missing required fields");
+//   }
+
+//   try {
+//     // Log the file paths before uploading
+//     console.log('Video file path:', videoFile.path);
+//     if (thumbnailFile) {
+//       console.log('Thumbnail file path:', thumbnailFile.path);
+//     }
+
+//     // Upload video and thumbnail files
+//     const videoUpload = await uploadOnCloudinary(videoFile.path);
+//     const thumbnailUpload = thumbnailFile
+//       ? await uploadOnCloudinary(thumbnailFile.path)
+//       : null;
+
+//     // Log upload responses
+//     console.log('Video upload response:', videoUpload);
+//     console.log('Thumbnail upload response:', thumbnailUpload);
+
+//     if (!videoUpload || !videoUpload.secure_url) {
+//       throw new ApiError(500, "Error uploading video");
+//     }
+
+//     // Create a new video document
+//     const video = new Video({
+//       videoFile: videoUpload.secure_url,
+//       thumbnail: thumbnailUpload ? thumbnailUpload.secure_url : null,
+//       title,
+//       description,
+//       duration: videoUpload.duration / 120, // 120 secs
+//       owner: req.user._id,
+//     });
+
+//     // Save the video document to the database
+//     await video.save();
+
+//     return res
+//       .status(201)
+//       .json(new ApiResponse(201, "Video published successfully", video));
+//   } catch (error) {
+//     console.error('Error in publishing video:', error);
+//     return res.status(500).json(new ApiResponse(500, error.message));
+//   }
+// });
+
+const publishAVideo = asyncHandler(async (req, res) => {
   const { title, description } = req.body;
   const videoFile = req.files?.videoFile?.[0];
   const thumbnailFile = req.files?.thumbnailFile?.[0];
 
-  // Log the extracted files
-  console.log('Video file:', videoFile);
-  console.log('Thumbnail file:', thumbnailFile);
-
   if (!title || !description || !videoFile) {
-    throw new ApiError(400, "Missing required fields");
+    return res.status(400).json(new ApiResponse(400, "Missing required fields"));
   }
 
   try {
-    // Log the file paths before uploading
-    console.log('Video file path:', videoFile.path);
-    if (thumbnailFile) {
-      console.log('Thumbnail file path:', thumbnailFile.path);
+    // Wrap NSFW detection in a more robust error handler
+    const nsfwResult = await handleNSFWDetection(videoFile.path);
+    
+    if (nsfwResult.error) {
+      // Detailed logging without crashing
+      console.error('NSFW Detection Error:', nsfwResult.error);
+      return res.status(500).json(new ApiResponse(500, "Content analysis failed"));
     }
 
-    // Upload video and thumbnail files
+    if (nsfwResult.is_nsfw) {
+      // Cleanup files safely
+      await safelyDeleteFiles([videoFile.path, thumbnailFile?.path]);
+      
+      return res.status(400).json(new ApiResponse(400, "Inappropriate content detected"));
+    }
+
+    // Upload to Cloudinary
     const videoUpload = await uploadOnCloudinary(videoFile.path);
     const thumbnailUpload = thumbnailFile
       ? await uploadOnCloudinary(thumbnailFile.path)
       : null;
 
-    // Log upload responses
-    console.log('Video upload response:', videoUpload);
-    console.log('Thumbnail upload response:', thumbnailUpload);
-
     if (!videoUpload || !videoUpload.secure_url) {
-      throw new ApiError(500, "Error uploading video");
+      await safelyDeleteFiles([videoFile.path, thumbnailFile?.path]);
+      return res.status(500).json(new ApiResponse(500, "Video upload failed"));
     }
 
-    // Create a new video document
+    // Create and save video
     const video = new Video({
       videoFile: videoUpload.secure_url,
       thumbnail: thumbnailUpload ? thumbnailUpload.secure_url : null,
       title,
       description,
-      duration: videoUpload.duration / 120, // 120 secs
+      duration: videoUpload.duration / 120,
       owner: req.user._id,
+      nsfwAnalysis: {
+        checked: true,
+        score: nsfwResult.confidence,
+        checkedAt: new Date()
+      }
     });
 
-    // Save the video document to the database
     await video.save();
 
-    return res
-      .status(201)
-      .json(new ApiResponse(201, "Video published successfully", video));
+    return res.status(201).json(new ApiResponse(201, "Video published successfully", video));
+
   } catch (error) {
-    console.error('Error in publishing video:', error);
-    return res.status(500).json(new ApiResponse(500, error.message));
+    // Centralized error handling
+    console.error('Video Publish Error:', error);
+    
+    // Safely delete temporary files
+    await safelyDeleteFiles([videoFile.path, thumbnailFile?.path]);
+
+    return res.status(500).json(new ApiResponse(500, error.message || "Internal server error"));
   }
 });
+
+// Utility function for safe file deletion
+async function safelyDeleteFiles(filePaths) {
+  for (const filePath of filePaths.filter(Boolean)) {
+    try {
+      await fs.unlink(filePath);
+    } catch (error) {
+      console.warn(`Failed to delete file ${filePath}:`, error);
+    }
+  }
+}
+
+// Improved NSFW detection wrapper
+async function handleNSFWDetection(filePath) {
+  try {
+    console.log('Starting NSFW content analysis...');
+    const result = await NSFWDetector.detectNSFW(filePath);
+    console.log('NSFW Analysis Complete:', result);
+    return result;
+  } catch (error) {
+    console.error('NSFW Detection Failed:', error);
+    return { 
+      error: true, 
+      message: error.message 
+    };
+  }
+}
 
 
 

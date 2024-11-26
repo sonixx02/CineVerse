@@ -1,0 +1,15 @@
+{
+  "watch": ["src"],
+  "ext": "js,json,mjs",
+  "ignore": [
+      "src/temp/",
+      "src/uploads/",
+      "temp/", 
+      "uploads/",
+      "*.test.js", 
+      "node_modules/",
+      "**/*.{jpg,jpeg,png,gif,mp4,avi,mov,txt,json}", 
+      "**/*_result_*.json" 
+  ],
+  "exec": "node -r dotenv/config --experimental-json-modules src/index.js"
+}
