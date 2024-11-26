@@ -1,7 +1,9 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-const API_URL =  'https://cineverse-fnr5.onrender.com/api/v1/users';
-// Async thunk to update video
+
+// Get the API URL from the environment variable
+const API_URL = import.meta.env.VITE_API_URL;
+
 export const updateVideo = createAsyncThunk('videos/updateVideo', async ({ videoId, title, description, videoFile }) => {
   try {
     // Update the title and description
@@ -46,7 +48,7 @@ export const deleteVideo = createAsyncThunk('videos/deleteVideo', async (videoId
 // Async thunk to fetch random videos
 export const RandomVideos = createAsyncThunk('videos/RandomVideos', async () => {
   try {
-    const response = await axios.get('${API_URL}/dashboard/random');
+    const response = await axios.get(`${API_URL}/dashboard/random`);
     return response.data.data; 
   } catch (error) {
     return Promise.reject(error.response?.data?.message || error.message);
@@ -54,36 +56,22 @@ export const RandomVideos = createAsyncThunk('videos/RandomVideos', async () => 
 });
 
 // Async thunk to fetch videos by query
-// export const fetchVideos = createAsyncThunk('videos/fetchVideos', async (query) => {
-//   try {
-//     const response = await axios.get(`http://localhost:8000/api/v1/users/getVideos?query=${query}`);
-//     console.log(response.data);
-//     return response.data.data; 
-//   } catch (error) {
-//     return Promise.reject(error.response?.data?.message || error.message);
-//   }
-// });
-
 export const fetchVideos = createAsyncThunk(
   'videos/fetchVideos',
   async (searchTerm) => {
     try {
       const response = await axios.get(`${API_URL}/getVideos?query=${searchTerm}`);
-      console.log(response.data); // Log response data for debugging
       return response.data.data; // Return the video data
     } catch (error) {
-      // Handle error and return a rejected promise
       return Promise.reject(error.response?.data?.message || error.message);
     }
   }
 );
 
-
-
 // Async thunk to add a new video
 export const addVideo = createAsyncThunk('videos/addVideo', async (formData) => {
   try {
-    const response = await axios.post('http://localhost:8000/api/v1/users/publish', formData, {
+    const response = await axios.post(`${API_URL}/publish`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -97,7 +85,7 @@ export const addVideo = createAsyncThunk('videos/addVideo', async (formData) => 
 // Async thunk to fetch video by ID
 export const fetchVideoById = createAsyncThunk('videos/fetchVideoById', async (videoId) => {
   try {
-    const response = await axios.get(`http://localhost:8000/api/v1/users/${videoId}`);
+    const response = await axios.get(`${API_URL}/${videoId}`);
     return response.data.data; 
   } catch (error) {
     return Promise.reject(error.response?.data?.message || error.message);
@@ -107,10 +95,8 @@ export const fetchVideoById = createAsyncThunk('videos/fetchVideoById', async (v
 // Async thunk to add to watch history
 export const addToWatchHistory = createAsyncThunk('videos/addToWatchHistory', async (videoId) => {
   try {
-    const response = await axios.post('http://localhost:8000/api/v1/users/watch-history', { videoId });
-    console.log(response.data);
+    const response = await axios.post(`${API_URL}/watch-history`, { videoId });
     return response.data;
-     // Assuming response.data contains the updated watch history
   } catch (error) {
     return Promise.reject(error.response?.data?.message || error.message);
   }
@@ -119,12 +105,7 @@ export const addToWatchHistory = createAsyncThunk('videos/addToWatchHistory', as
 // Async thunk to fetch watch history
 export const fetchWatchHistory = createAsyncThunk('videos/fetchWatchHistory', async () => {
   try {
-    const response = await axios.get('http://localhost:8000/api/v1/users/history', {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    console.log(response.data.data);
+    const response = await axios.get(`${API_URL}/history`);
     return response.data.data; 
   } catch (error) {
     return Promise.reject(error.response?.data?.message || error.message);
@@ -158,7 +139,6 @@ const videosSlice = createSlice({
         state.status = 'loading';
       })
       .addCase(fetchVideos.fulfilled, (state, action) => {
-        console.log('Fetched videos:', action.payload);
         state.status = 'succeeded';
         state.videos = action.payload.data;
       })
@@ -195,11 +175,7 @@ const videosSlice = createSlice({
       })
       .addCase(deleteVideo.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        if (Array.isArray(state.videos)) {
-          state.videos = state.videos.filter(video => video._id !== action.payload); // Ensure videos is an array
-        } else {
-          console.error('State.videos is not an array:', state.videos);
-        }
+        state.videos = state.videos.filter(video => video._id !== action.payload); // Ensure videos is an array
       })
       .addCase(deleteVideo.rejected, (state, action) => {
         state.status = 'failed';
@@ -211,15 +187,9 @@ const videosSlice = createSlice({
       .addCase(updateVideo.fulfilled, (state, action) => {
         state.status = 'succeeded';
         const updatedVideo = action.payload;
-
-        // Check if state.videos is an array before using findIndex
-        if (Array.isArray(state.videos)) {
-          const index = state.videos.findIndex(video => video._id === updatedVideo._id);
-          if (index !== -1) {
-            state.videos[index] = updatedVideo;
-          }
-        } else {
-          console.error('State.videos is not an array:', state.videos);
+        const index = state.videos.findIndex(video => video._id === updatedVideo._id);
+        if (index !== -1) {
+          state.videos[index] = updatedVideo;
         }
       })
       .addCase(updateVideo.rejected, (state, action) => {
@@ -231,9 +201,7 @@ const videosSlice = createSlice({
       })
       .addCase(addToWatchHistory.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        if(Array.isArray(state.watchHistory)){
         state.watchHistory.push(action.payload);
-        }
       })
       .addCase(addToWatchHistory.rejected, (state, action) => {
         state.status = 'failed';

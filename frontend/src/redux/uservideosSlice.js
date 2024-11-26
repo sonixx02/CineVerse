@@ -1,10 +1,11 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-const API_URL =  'https://cineverse-fnr5.onrender.com/api/v1/users';
+// Get the API URL from the environment variable
+const API_URL = import.meta.env.VITE_API_URL;
+
 export const getChannelVideos = createAsyncThunk('uservideos/getChannelVideos', async (username) => {
   try {
-    
     const response = await axios.get(`${API_URL}/dashboard/channel-videos/${username}`);
     console.log(response);
     return response.data.data.videos;
@@ -15,16 +16,13 @@ export const getChannelVideos = createAsyncThunk('uservideos/getChannelVideos', 
 
 export const getChannelStatus = createAsyncThunk('uservideos/getChannelStatus', async (username) => {
   try {
-    const response = await axios.get(`${API_URL}/users/dashboard/channel-stats/${username}`);
+    const response = await axios.get(`${API_URL}/dashboard/channel-stats/${username}`);
     console.log(response.data.data.channelStats); // Debugging response
     return response.data.data.channelStats; // Return the channelStats array
   } catch (error) {
     return Promise.reject(error.response?.data?.message || error.message);
   }
 });
-
-
-
 
 const uservideosSlice = createSlice({
   name: 'uservideos',
@@ -51,12 +49,10 @@ const uservideosSlice = createSlice({
       .addCase(getChannelStatus.fulfilled, (state, action) => {
         state.status = 'succeeded';
         if (action.payload && action.payload.length > 0) {
-            state.channelStats = action.payload[0]; // Safely access the first element
+          state.channelStats = action.payload[0]; // Safely access the first element
         }
-    })
-    
+      });
   },
 });
-
 
 export default uservideosSlice.reducer;

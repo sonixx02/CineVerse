@@ -1,8 +1,11 @@
 import { createSlice } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-
+// Ensure credentials are sent with requests
 axios.defaults.withCredentials = true;
+
+// Get the API URL from the environment variable
+const API_URL = import.meta.env.VITE_API_URL;
 
 export const authSlice = createSlice({
   name: 'auth',
@@ -29,10 +32,7 @@ export const authSlice = createSlice({
 
 export const { loginStart, loginSuccess, loginFailure, logout } = authSlice.actions;
 
-// const API_URL = 'http://localhost:8000/api/v1/users';
-const API_URL =  'https://cineverse-fnr5.onrender.com/api/v1/users';
-
-
+// Async thunk for login
 export const login = (credentials) => async (dispatch) => {
   dispatch(loginStart());
   try {
@@ -44,7 +44,7 @@ export const login = (credentials) => async (dispatch) => {
   }
 };
 
-
+// Async thunk for logout
 export const logoutUser = () => async (dispatch) => {
   try {
     await axios.post(`${API_URL}/logout`, {}, { withCredentials: true });
