@@ -1,8 +1,7 @@
-// src/components/VoiceCommand.js
 import React, { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { useVoice } from '../context/VoiceContext'; // Import the VoiceContext
+// import { useVoice } from '../context/VoiceContext';
 import { fetchVideoById, fetchVideos } from '../redux/videosSlice';
 
 const VoiceCommand = () => {
@@ -10,8 +9,7 @@ const VoiceCommand = () => {
   const navigate = useNavigate();
   const { filteredTranscript, isListening, startListening, browserSupportsSpeechRecognition } = useVoice();
 
-  const forbiddenWords = ['adultWord1', 'adultWord2', 'adultWord3']; // Add your forbidden words here
-
+  const forbiddenWords = ['adultWord1', 'adultWord2', 'adultWord3']; 
   useEffect(() => {
     // Handle commands based on the filtered transcript
     handleVoiceCommands(filteredTranscript);

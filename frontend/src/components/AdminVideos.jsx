@@ -15,7 +15,7 @@ const AdminVideos = () => {
   const [updateData, setUpdateData] = useState({});
   const [videoFile, setVideoFile] = useState(null);
 
-  const navigate = useNavigate(); // <-- Move useNavigate before return
+  const navigate = useNavigate(); 
 
   // Fetch videos and stats
   useEffect(() => {
