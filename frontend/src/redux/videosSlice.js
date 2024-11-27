@@ -49,6 +49,7 @@ export const deleteVideo = createAsyncThunk('videos/deleteVideo', async (videoId
 export const RandomVideos = createAsyncThunk('videos/RandomVideos', async () => {
   try {
     const response = await axios.get(`${API_URL}/dashboard/random`);
+    console.log(response);
     return response.data.data; 
   } catch (error) {
     return Promise.reject(error.response?.data?.message || error.message);
