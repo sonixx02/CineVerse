@@ -98,24 +98,12 @@ const registerUser = asyncHandler(async (req, res) => {
 });
 
 const loginUser = asyncHandler(async (req, res) => {
-  // req body -> data
-  // username or email
-  //find the user
-  //password check
-  //access and referesh token
-  //send cookie
-
   const { email, username, password } = req.body;
   console.log(email);
 
   if (!username && !email) {
     throw new ApiError(400, "username or email is required");
   }
-
-  // if (!(username || email)) {
-  //     throw new ApiError(400, "username or email is required")
-
-  // }
 
   const user = await User.findOne({
     $or: [{ username }, { email }],
@@ -131,21 +119,18 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Invalid user credentials");
   }
 
-  const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
-    user._id
-  );
+  const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefereshTokens(user._id);
 
   const loggedInUser = await User.findById(user._id).select(
     "-password -refreshToken"
   );
 
-  res.cookie("accessToken", token, {
+  const options = {
     httpOnly: true,
     secure: true, // Use true for HTTPS
     sameSite: "None", // Allows cross-site cookies
-  });
-  
-  
+    maxAge: 24 * 60 * 60 * 1000 // Optional: Cookie expires in 24 hours
+  };
 
   return res
     .status(200)

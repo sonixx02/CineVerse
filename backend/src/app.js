@@ -10,13 +10,21 @@ const allowedOrigins = [
   'http://localhost:5173',               // Local development frontend
 ];
 
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL ,
-    credentials: true, // Required for cookies
-  })
-);
+app.use(cors({
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
+}));
 
+app.options('*', cors()); // Handle preflight requests for all routes
 
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
