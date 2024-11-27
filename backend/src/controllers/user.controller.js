@@ -140,7 +140,9 @@ const loginUser = asyncHandler(async (req, res) => {
   );
 
   res.cookie("accessToken", token, {
-    secure: true, // Use true for HTTPS // Allows cross-site cookies
+    httpOnly: true,
+    secure: true, // Use true for HTTPS
+    sameSite: "None", // Allows cross-site cookies
   });
   
   
