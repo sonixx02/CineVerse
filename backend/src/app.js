@@ -4,16 +4,16 @@ import cookieParser from "cookie-parser";
 
 const app = express();
 
-// Update CORS to allow multiple origins
-const allowedOrigins = [
-  'https://cine-verse-lilac.vercel.app',  // Vercel frontend
-  'http://localhost:5173',               // Local development frontend
-];
+// // Update CORS to allow multiple origins
+// const allowedOrigins = [
+//   'https://cine-verse-lilac.vercel.app',  // Vercel frontend
+//   'http://localhost:5173',               // Local development frontend
+// ];
 
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL ,
-    credentials: true, // Required for cookies
+    origin: "https://cine-verse-lilac.vercel.app", // Your frontend domain
+    credentials: true, // Allow cookies
   })
 );
 
