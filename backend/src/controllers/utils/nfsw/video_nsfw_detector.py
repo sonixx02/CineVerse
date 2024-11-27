@@ -5,6 +5,20 @@ import tempfile
 import numpy as np
 from datetime import datetime
 
+import sys
+
+
+print("Python Path:", sys.path)
+print("Current Working Directory:", os.getcwd())
+
+try:
+    import cv2
+    print("OpenCV Version:", cv2.__version__)
+    print("OpenCV Path:", cv2.__file__)
+except ImportError as e:
+    print("Import Error Details:", e)
+    print("Installed Packages:", os.popen('pip list').read())
+
 class VideoNSFWDetector:
     def __init__(self):
         """Initialize the NSFW detector with a temporary directory."""
