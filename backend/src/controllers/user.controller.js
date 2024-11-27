@@ -139,10 +139,13 @@ const loginUser = asyncHandler(async (req, res) => {
     "-password -refreshToken"
   );
 
-  const options = {
+  res.cookie("accessToken", token, {
     httpOnly: true,
-    secure: true,
-  };
+    secure: true, // Use true for HTTPS
+    sameSite: "None", // Allows cross-site cookies
+  });
+  
+  
 
   return res
     .status(200)

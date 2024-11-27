@@ -12,8 +12,8 @@ const allowedOrigins = [
 
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN, // Dynamic CORS origin
-    credentials: true, // Allow cookies
+    origin: process.env.FRONTEND_URL ,
+    credentials: true, // Required for cookies
   })
 );
 
