@@ -107,7 +107,10 @@ const getVideoComments = asyncHandler(async (req, res) => {
 });
 
 const addComment = asyncHandler(async (req, res) => {
-  const { content, videoId } = req.body;
+  const { content } = req.body; 
+  const { videoId } = req.params;
+  
+  console.log(req.body, req.params); 
 
   
   if (!content || !videoId) {
@@ -124,20 +127,16 @@ const addComment = asyncHandler(async (req, res) => {
     const newComment = new Comment({
       content,
       video: videoId,
-      owner: req.user._id, 
+      owner: req.user._id,
     });
-
-    
-    const savedComment = await newComment.save();
-
-   
-    await savedComment
-      .populate({
-        path: "owner",
-        select: "username avatar",
-      })
-      .execPopulate();
-
+  
+    let savedComment = await newComment.save();
+  
+    savedComment = await savedComment.populate({
+      path: "owner",
+      select: "username avatar",
+    });
+  
     return res.status(201).json(
       new ApiResponse(
         201,
@@ -150,39 +149,41 @@ const addComment = asyncHandler(async (req, res) => {
     );
   } catch (error) {
     console.error("Error adding comment:", error);
-    return res.status(500).json(new ApiResponse(500, null, "Server Error"));
+    return res.status(500).json(new ApiResponse(500, null, error.message));
   }
 });
 
-const updateComment = asyncHandler(async (req, res) => {
-  const { id } = req.params; // Comment ID from URL params
-  const { content } = req.body; // New content to update
 
-  // Ensure content is provided
+
+const updateComment = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { content } = req.body; 
+
+  
   if (!content) {
     return res
       .status(400)
       .json(new ApiResponse(400, null, "Content is required"));
   }
 
-  // Ensure comment ID is valid
+  
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res
       .status(400)
       .json(new ApiResponse(400, null, "Invalid comment ID"));
   }
 
-  // Find the comment to update
+  
   const comment = await Comment.findById(id);
 
-  // Check if comment exists
+  
   if (!comment) {
     return res
       .status(404)
       .json(new ApiResponse(404, null, "Comment not found"));
   }
 
-  // Check if the user is the owner of the comment
+  
   if (comment.owner.toString() !== req.user._id.toString()) {
     return res
       .status(403)
@@ -191,7 +192,7 @@ const updateComment = asyncHandler(async (req, res) => {
       );
   }
 
-  // Update the comment
+  
   comment.content = content;
 
   try {

@@ -83,6 +83,57 @@ export const addVideo = createAsyncThunk('videos/addVideo', async (formData) => 
   }
 });
 
+// export const getVideoComments = createAsyncThunk(
+//   'videos/getVideoComments',
+//   async (videoId) => {
+//     try {
+//       const response = await axios.get(`${API_URL}/videos/${videoId}/comments?page=1&limit=10`);
+//       return response.data.data.comments; 
+//     } catch (error) {
+//       return Promise.reject(error.response?.data?.message || error.message);
+//     }
+//   }
+// );
+
+export const getVideoComments = createAsyncThunk(
+  'videos/getVideoComments',
+  async (videoId) => {
+    try {
+      const response = await axios.get(`${API_URL}/videos/${videoId}/comments?page=1&limit=10`);
+      // Transform comments to match the expected structure
+      return response.data.data.comments.map(comment => ({
+        comment: comment,
+        userDetails: comment.owner
+      }));
+    } catch (error) {
+      return Promise.reject(error.response?.data?.message || error.message);
+    }
+  }
+);
+
+export const addComment = createAsyncThunk(
+  'videos/addComment',
+  async ({ content, videoId }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`${API_URL}/videos/${videoId}/comments`, {
+        content: content 
+      });
+
+      // Directly return the response data structure
+      return {
+        comment: response.data.data.comment,
+        userDetails: response.data.data.comment.owner // Use owner from comment
+      };
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || error.message
+      );
+    }
+  }
+);
+
+
+
 // Async thunk to fetch video by ID
 export const fetchVideoById = createAsyncThunk('videos/fetchVideoById', async (videoId) => {
   try {
@@ -119,6 +170,7 @@ const videosSlice = createSlice({
   initialState: {
     videos: [],
     watchHistory: [],
+    comments: [], 
     status: 'idle',
     error: null,
   },
@@ -218,7 +270,34 @@ const videosSlice = createSlice({
       .addCase(fetchWatchHistory.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.error.message;
+      })
+      .addCase(getVideoComments.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(getVideoComments.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.comments = action.payload;
+      })
+      .addCase(getVideoComments.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message;
+      })
+      .addCase(addComment.pending, (state) => {
+        state.loading = true; // Set loading state when adding a comment
+      })
+      .addCase(addComment.fulfilled, (state, action) => {
+        state.loading = false;
+        // Directly push the comment object in the expected format
+        state.comments.push({
+          comment: action.payload.comment,
+          userDetails: action.payload.comment.owner
+        });
+      })
+      .addCase(addComment.rejected, (state, action) => {
+        state.loading = false; // Set loading to false on error
+        state.error = action.payload; // Capture error
       });
+      
   },
 });
 

@@ -24,11 +24,7 @@ const Dashboard = () => {
     file: null,
   });
 
-  const videoRefs = useRef({}); // To store refs for each video
-
-  // useEffect(() => {
-  //   dispatch(RandomVideos());
-  // }, [dispatch]);
+  const videoRefs = useRef({}); 
 
   useEffect(() => {
     dispatch(RandomVideos()).then((response) => {
@@ -106,9 +102,9 @@ const Dashboard = () => {
     };
   }, []);
 
-   // Handle voice search command
+  
    const handleVoiceSearch = (searchTerm) => {
-    setQuery(searchTerm); // Set the query from voice command
+    setQuery(searchTerm); 
   };
 
   if (status === "loading") {
@@ -229,7 +225,7 @@ const Dashboard = () => {
                 style={{ paddingBottom: "56.25%" }}
               >
                 {" "}
-                {/* 16:9 aspect ratio */}
+                
                 <video
                   ref={(el) => (videoRefs.current[video._id] = el)}
                   controls
