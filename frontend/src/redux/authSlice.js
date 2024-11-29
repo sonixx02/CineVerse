@@ -1,10 +1,8 @@
-import { createSlice } from '@reduxjs/toolkit';
 import axios from 'axios';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
-// Ensure credentials are sent with requests
 axios.defaults.withCredentials = true;
 
-// Get the API URL from the environment variable
 const API_URL = import.meta.env.VITE_API_URL;
 
 export const authSlice = createSlice({
@@ -27,12 +25,17 @@ export const authSlice = createSlice({
       state.user = null;
       state.status = 'idle'; 
     },
+    signupSuccess: (state, action) => {
+     
+      state.status = 'succeeded';
+      state.user = action.payload;
+    },
   },
 });
 
-export const { loginStart, loginSuccess, loginFailure, logout } = authSlice.actions;
+export const { loginStart, loginSuccess, loginFailure, logout, signupSuccess } = authSlice.actions;
 
-// Async thunk for login
+
 export const login = (credentials) => async (dispatch) => {
   dispatch(loginStart());
   try {
@@ -44,7 +47,6 @@ export const login = (credentials) => async (dispatch) => {
   }
 };
 
-// Async thunk for logout
 export const logoutUser = () => async (dispatch) => {
   try {
     await axios.post(`${API_URL}/logout`, {}, { withCredentials: true });
@@ -54,4 +56,17 @@ export const logoutUser = () => async (dispatch) => {
   }
 };
 
+
+export const signup = createAsyncThunk(
+  'auth/signup',
+  async (formData, { rejectWithValue }) => {
+    try {
+      
+      const response = await axios.post(`${API_URL}/register`, formData);
+      return response.data; 
+    } catch (error) {
+      return rejectWithValue(error.response.data); 
+    }
+  }
+);
 export default authSlice.reducer;
